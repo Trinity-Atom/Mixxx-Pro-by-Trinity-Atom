@@ -1,0 +1,4 @@
+numpy
+onnxruntime
+mutagen
+openvino>=2026.4.1

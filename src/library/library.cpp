@@ -25,6 +25,9 @@
 #include "library/rhythmbox/rhythmboxfeature.h"
 #include "library/serato/seratofeature.h"
 #include "library/sidebarmodel.h"
+#ifdef __STEM__
+#include "library/stemgeneration.h"
+#endif
 #include "library/trackcollection.h"
 #include "library/trackcollectionmanager.h"
 #include "library/trackmodel.h"
@@ -76,6 +79,32 @@ Library::Library(
           m_pKeyNotation(std::make_unique<ControlObject>(
                   mixxx::library::prefs::kKeyNotationConfigKey, false)) {
     qRegisterMetaType<LibraryRemovalType>("LibraryRemovalType");
+#ifdef __STEM__
+    m_pStemGeneration = make_parented<StemGeneration>(this, m_pConfig);
+    connect(m_pStemGeneration, &StemGeneration::trackCreated, this, [this](const QString& path) {
+        const auto track = m_pTrackCollectionManager->getOrAddTrack(TrackRef::fromFilePath(path));
+        if (!track) {
+            kLogger.warning() << "Failed to import generated Stem file" << path;
+            QMessageBox::warning(nullptr, tr("Create Stems"),
+                    tr("The Stem file was saved, but could not be added to the library: %1").arg(path));
+        }
+    });
+    connect(m_pStemGeneration, &StemGeneration::completed, this,
+            [](int created, const QStringList& errors, bool canceled) {
+                QMessageBox message;
+                message.setWindowTitle(tr("Create Stems"));
+                message.setIcon(errors.isEmpty() ? QMessageBox::Information : QMessageBox::Warning);
+                message.setText(canceled
+                                ? tr("Stem generation canceled. Created %n file(s).", nullptr, created)
+                                : tr("Stem generation finished. Created %n file(s).", nullptr, created));
+                if (!errors.isEmpty()) {
+                    message.setInformativeText(tr("Some tracks were skipped or reported errors or warnings. "
+                                                  "See Details for more information."));
+                    message.setDetailedText(errors.join("\n\n"));
+                }
+                message.exec();
+            });
+#endif
 
     DateFormatChangedBroadcaster::createInstance();
 
@@ -281,6 +310,12 @@ TrackCollectionManager* Library::trackCollectionManager() const {
     return m_pTrackCollectionManager;
 }
 
+#ifdef __STEM__
+StemGeneration* Library::stemGeneration() const {
+    return m_pStemGeneration.get();
+}
+#endif
+
 namespace {
 class TrackAnalysisSchedulerEnvironmentImpl final : public TrackAnalysisSchedulerEnvironment {
   public:
@@ -312,6 +347,9 @@ TrackAnalysisScheduler::Pointer Library::createTrackAnalysisScheduler(
 }
 
 void Library::stopPendingTasks() {
+#ifdef __STEM__
+    m_pStemGeneration->stop();
+#endif
     if (m_pAnalysisFeature) {
         m_pAnalysisFeature->stopAnalysis();
     }

@@ -34,6 +34,9 @@ class WSearchLineEdit;
 class WLibrarySidebar;
 class WLibrary;
 class QAbstractItemModel;
+#ifdef __STEM__
+class StemGeneration;
+#endif
 
 #ifdef __ENGINEPRIME__
 namespace mixxx {
@@ -62,6 +65,9 @@ class Library: public QObject {
     }
 
     TrackCollectionManager* trackCollectionManager() const;
+#ifdef __STEM__
+    StemGeneration* stemGeneration() const;
+#endif
 
     TrackAnalysisScheduler::Pointer createTrackAnalysisScheduler(
             int numWorkerThreads,
@@ -193,6 +199,9 @@ class Library: public QObject {
 
     parented_ptr<SidebarModel> m_pSidebarModel;
     parented_ptr<LibraryControl> m_pLibraryControl;
+#ifdef __STEM__
+    parented_ptr<StemGeneration> m_pStemGeneration;
+#endif
 
     QList<LibraryFeature*> m_features;
     const static QString m_sTrackViewName;

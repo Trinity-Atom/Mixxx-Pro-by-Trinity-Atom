@@ -2908,10 +2908,15 @@ if(STEM)
     mixxx-lib
     PRIVATE
       src/sources/soundsourcestem.cpp
+      src/library/stemgeneration.cpp
       src/track/steminfoimporter.cpp
       src/track/steminfo.cpp
       src/widget/wtrackstemmenu.cpp
       src/widget/wstemlabel.cpp
+  )
+  install(
+    FILES tools/demucs_onnx_to_stem.py tools/requirements-demucs-stem.txt
+    DESTINATION "${MIXXX_INSTALL_DATADIR}/tools"
   )
   if(QOPENGL)
     target_sources(
@@ -3048,6 +3053,7 @@ if(BUILD_TESTING)
       ${src-mixxx-test}
       src/test/stemtest.cpp
       src/test/steminfotest.cpp
+      src/test/stemgenerationtest.cpp
       src/test/stemcontrolobjecttest.cpp
     )
   endif()

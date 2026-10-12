@@ -53,6 +53,7 @@
 #include "widget/wstarrating.h"
 #include "widget/wstarratingaction.h"
 #ifdef __STEM__
+#include "library/stemgeneration.h"
 #include "widget/wtrackstemmenu.h"
 #endif
 
@@ -592,6 +593,10 @@ void WTrackMenu::createActions() {
                 &QAction::triggered,
                 this,
                 &WTrackMenu::slotReanalyzeWithVariableTempo);
+#ifdef __STEM__
+        m_pCreateStemsAction = make_parented<QAction>(tr("Create Stems"), this);
+        connect(m_pCreateStemsAction, &QAction::triggered, this, &WTrackMenu::slotCreateStems);
+#endif
     }
 
     // This action is only usable when m_deckGroup is set. That is true only
@@ -767,6 +772,10 @@ void WTrackMenu::setupActions() {
         m_pAnalyzeMenu->addAction(m_pReanalyzeAction);
         m_pAnalyzeMenu->addAction(m_pReanalyzeConstBpmAction);
         m_pAnalyzeMenu->addAction(m_pReanalyzeVarBpmAction);
+#ifdef __STEM__
+        m_pAnalyzeMenu->addSeparator();
+        m_pAnalyzeMenu->addAction(m_pCreateStemsAction);
+#endif
         addMenu(m_pAnalyzeMenu);
     }
 
@@ -1804,6 +1813,16 @@ void WTrackMenu::addToAnalysis(AnalyzerTrack::Options options) {
 void WTrackMenu::slotAnalyze() {
     addToAnalysis();
 }
+
+#ifdef __STEM__
+void WTrackMenu::slotCreateStems() {
+    QStringList paths;
+    for (const auto& trackRef : getTrackRefs()) {
+        paths.append(trackRef.getLocation());
+    }
+    m_pLibrary->stemGeneration()->start(paths, parentWidget());
+}
+#endif
 
 void WTrackMenu::slotReanalyze() {
     clearBeats();
