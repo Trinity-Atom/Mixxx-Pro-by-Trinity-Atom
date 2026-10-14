@@ -2903,6 +2903,9 @@ if(STEM)
     message(FATAL_ERROR "STEM requires that also FFmpeg is enabled")
   endif()
   target_compile_definitions(mixxx-lib PUBLIC __STEM__)
+  target_compile_definitions(
+    mixxx-lib PRIVATE MIXXX_STEM_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+  )
   list(APPEND MIXXX_LIB_PRECOMPILED_HEADER src/track/steminfo.h)
   target_sources(
     mixxx-lib

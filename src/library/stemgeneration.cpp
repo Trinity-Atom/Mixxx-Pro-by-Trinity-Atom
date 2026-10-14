@@ -109,10 +109,31 @@ QStringList StemGeneration::findDependencies() {
     if (m_model.isEmpty()) {
         errors.append(tr("The Stem separation model or its matching JSON contract is missing."));
     }
-    if (!QFileInfo(resources.filePath("tools/demucs_onnx_to_stem.py")).isFile()) {
+    if (helperPath().isEmpty()) {
         errors.append(tr("The Stem generation helper is missing."));
     }
     return errors;
+}
+
+QString StemGeneration::helperPath() const {
+    const QDir resources(m_config->getResourcePath());
+    const QString resourceHelper = resources.filePath("tools/demucs_onnx_to_stem.py");
+    if (QFileInfo(resourceHelper).isFile()) {
+        return resourceHelper;
+    }
+#ifdef MIXXX_STEM_SOURCE_DIR
+    const QString sourceResources =
+            QDir(QStringLiteral(MIXXX_STEM_SOURCE_DIR)).filePath("res");
+    if (QDir::cleanPath(resources.absolutePath()) == QDir::cleanPath(sourceResources)) {
+        const QString sourceHelper =
+                QDir(QStringLiteral(MIXXX_STEM_SOURCE_DIR))
+                        .filePath("tools/demucs_onnx_to_stem.py");
+        if (QFileInfo(sourceHelper).isFile()) {
+            return sourceHelper;
+        }
+    }
+#endif
+    return {};
 }
 
 void StemGeneration::start(const QStringList& paths, QWidget* parent) {
@@ -201,7 +222,7 @@ void StemGeneration::startNext() {
                                     .arg(QFileInfo(m_input).fileName()));
     m_progress->setValue(m_processed * 100);
     m_process.start(m_python,
-            {QDir(m_config->getResourcePath()).filePath("tools/demucs_onnx_to_stem.py"),
+            {helperPath(),
                     m_input, "--output", m_output,
                     "--model", m_model,
                     "--ffmpeg", m_ffmpeg,

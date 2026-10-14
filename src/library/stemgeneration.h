@@ -31,6 +31,7 @@ class StemGeneration final : public QObject {
     void finishTrack(int exitCode, QProcess::ExitStatus status);
     void finish();
     QStringList findDependencies();
+    QString helperPath() const;
     void requestCancellation();
 
     const UserSettingsPointer m_config;
